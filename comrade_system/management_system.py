@@ -6,6 +6,9 @@ import pickle
 import gzip
 import threading
 import os
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
 
 
 DATA_ARCHIVE = "comrades_system.dat"
@@ -219,6 +222,163 @@ class Comrade_Information_Management_System:
                 if comrade and not comrade.has_mission():
                     print(f"{name}, {rank}, {status}")
 
+    def add_comrade_to_file(name, age, rank, squad):
+        with open("comrade.txt", "a") as file:
+            file.write(f"{name},{age},{rank},{squad}\n")
+
+    def read_comrades_from_file():
+        comrades = []
+        with open("comrade.txt", "r") as file:
+            for line in file:
+                name, age, rank, squad = line.strip().split(",")
+                comrades.append((name, age, rank, squad))
+        return comrades
+
+    def add_commander_to_file(name, age, rank, squad):
+        with open("commander.txt", "a") as file:
+            file.write(f"{name},{age},{rank},{squad}\n")
+
+    def read_commanders_from_file():
+        commanders = []
+        with open("commander.txt", "r") as file:
+            for line in file:
+                name, age, rank, squad = line.strip().split(",")
+                commanders.append((name, age, rank, squad))
+        return commanders
+    
+    def add_squad_to_file(name, commander, members):
+        with open("squads.txt", "a") as file:
+            file.write(f"{name},{commander},{members}\n")
+    
+    def read_squads_from_file():
+        squads = []
+        with open("squads.txt", "r") as file:
+            for line in file:
+                name, commander, members = line.strip().split(",")
+                squads.append((name, commander, members))
+        return squads
+    
+    def add_mission_to_file(name, squad):
+        with open("missions.txt", "a") as file:
+            file.write(f"{name},{squad}\n")
+
+    def read_mission_from_file():
+        missions = []
+        with open("missions.txt", "r") as file:
+            for line in file:
+                name, squad = line.strip().split(",")
+                missions.append((name, squad))
+        return missions
+
+class Comrade_Information_Management_System_GUI:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Comrade Information Management System")
+        self.master.geometry("800x600")
+        self.management_system = Comrade_Information_Management_System()
+
+        self.run_please()
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.notebook = ttk.Notebook(self.master)
+        self.notebook.pack(expand=True, fill=tk.BOTH)
+
+        self.comrades_tab = ttk.Frame(self.notebook)
+        self.commanders_tab = ttk.Frame(self.notebook)
+        self.missions_tab = ttk.Frame(self.notebook)
+        self.squads_tab = ttk.Frame(self.notebook)
+
+        self.notebook.add(self.comrades_tab, text="Comrades")
+        self.notebook.add(self.commanders_tab, text="Commanders")
+        self.notebook.add(self.missions_tab, text="Missions")
+        self.notebook.add(self.squads_tab, text="Squads")
+
+        # Populate each tab with necessary widgets and layout
+        self.create_comrades_tab()
+        self.create_commanders_tab()
+        self.create_missions_tab()
+        self.create_squads_tab()
+
+    def create_comrades_tab(self):
+        # Add widgets and layout for the comrades tab
+        self.add_comrade_button = ttk.Button(self.comrades_tab, text="Add Comrade", command=self.management_system.input_comrade)
+        self.add_comrade_button.pack(pady=10)
+        
+        self.list_comrades_button = ttk.Button(self.comrades_tab, text="List Comrades", command=self.management_system.list_comrades)
+        self.list_comrades_button.pack(pady=10)
+        
+    def create_commanders_tab(self):
+        # Add widgets and layout for the commanders tab
+        self.add_commander_button = ttk.Button(self.commanders_tab, text="Add Commander", command=self.management_system.input_commander)
+        self.add_commander_button.pack(pady=10)
+        
+        self.list_commanders_button = ttk.Button(self.commanders_tab, text="List Commanders", command=self.management_system.list_commanders)
+        self.list_commanders_button.pack(pady=10)
+
+    def create_missions_tab(self):
+        # Add widgets and layout for the missions tab
+        self.add_mission_button = ttk.Button(self.missions_tab, text="Add Mission", command=self.management_system.input_mission)
+        self.add_mission_button.pack(pady=10)
+        
+        self.list_missions_button = ttk.Button(self.missions_tab, text="List Missions", command=self.management_system.list_missions)
+        self.list_missions_button.pack(pady=10)
+
+    def create_squads_tab(self):
+        # Add widgets and layout for the squads tab
+        self.squads_listbox = tk.Listbox(self.squads_tab)
+        self.squads_listbox.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+        self.squads_scrollbar = tk.Scrollbar(self.squads_tab, orient=tk.VERTICAL, command=self.squads_listbox.yview)
+        self.squads_scrollbar.pack(side=tk.LEFT, fill=tk.Y)
+        self.squads_listbox.config(yscrollcommand=self.squads_scrollbar.set)
+
+        self.squads_buttons_frame = tk.Frame(self.squads_tab)
+        self.squads_buttons_frame.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.add_squad_button = tk.Button(self.squads_buttons_frame, text="Add Squad", command=self.add_squad)
+        self.add_squad_button.pack(fill=tk.X)
+
+        self.remove_squad_button = tk.Button(self.squads_buttons_frame, text="Remove Squad", command=self.remove_squad)
+        self.remove_squad_button.pack(fill=tk.X)
+
+        self.list_squads_button = tk.Button(self.squads_buttons_frame, text="List Squads", command=self.list_squads)
+        self.list_squads_button.pack(fill=tk.X)
+
+    def add_squad(self):
+        self.management_system.input_squad()
+        self.refresh_squads()
+
+    def remove_squad(self):
+        selected_squad = self.squads_listbox.get(self.squads_listbox.curselection())
+        self.management_system.squads.remove(selected_squad)
+        self.refresh_squads()
+
+    def list_squads(self):
+        self.refresh_squads()
+
+    def refresh_squads(self):
+        self.squads_listbox.delete(0, tk.END)
+        for squad in self.management_system.squads:
+            self.squads_listbox.insert(tk.END, f"{squad.name}")
+
+    def run_please(self):
+        data_file = "data.pickle.gz"
+        data = decompress_data(data_file)
+
+        if len(data) == 4:
+            self.management_system.comrades, self.management_system.commanders, self.management_system.missions, self.management_system.squads = data
+        else:
+            self.management_system.comrades = []
+            self.management_system.commanders = []
+            self.management_system.missions = []
+            self.management_system.squads = []
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = Comrade_Information_Management_System_GUI(root)
+    root.mainloop()
+
+
     def run_please(self):
         data_file = "data.pickle.gz"
         data = decompress_data(data_file)
@@ -231,7 +391,4 @@ class Comrade_Information_Management_System:
             self.missions = []
             self.squads = []
 
-        
-
-program = Comrade_Information_Management_System()
-program.run_please()
+    
